@@ -1,0 +1,10 @@
+001-bootstrap.sh
+010-std-lib.sh
+020-bash-completion.sh
+050-shortcuts.sh
+060-git-prompt.sh
+065-git-completion.sh
+080-nvm.sh
+090-direnv.sh
+100-development.sh
+200-devops.sh
