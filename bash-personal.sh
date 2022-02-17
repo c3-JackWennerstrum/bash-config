@@ -5,7 +5,7 @@ then
     # bring in some of the C3 shell configuration
     # TODO download the .git-prompt file on locally
     source ~/.bashrc_bootstrap
-    export PS1="\u $ \[\033[32m\]\w\[\033[33m\]\$(__git_ps1) \n\[\033[00m\]>> "
+    export PS1="\[\033[36m\]\u\[\033[37m\] @ \[\033[32m\]\w\[\033[33m\]\$(__git_ps1) \n\[\033[35m\]$ \[\033[00m\]"
 fi
 
 if [[ -e ~/.rgrc ]]; then export RIPGREP_CONFIG_PATH=~/.rgrc
@@ -16,29 +16,49 @@ if [[ ! -z $(bpytop -v) ]]; then alias tp='bpytop'
 else echo "BPYTOP NOT INSTALLED"; fi
 
 # C3 Specific Configuration
-if [[ ${whoami} == "jack.wennerstrumc3.ai" ]]
+if [[ $(whoami) == "jack.wennerstrumc3.ai" ]]
 then
     # root folders
     alias c3root='cd ~/c3'
     alias provroot='c3root && cd provisionLocation'
+    alias provroot2='c3root && cd provisionLocation2'
     alias fisroot='cd ~/c3/c3fis'
 
-
+    alias clang++='clang++ -std=c++17'
+    
     function dockerbash() {
         docker exec -it c3server$1 /bin/bash
         return 0
     }
 
+    function my-docker-pull-c3server() {
+        V=$1
+        echo "Executing"
+        echo -e "\tdocker pull ci-artifacts.c3.ai/c3server-noplugins:7.$V.0-stable"
+        docker pull ci-artifacts.c3.ai/c3server-noplugins:7.$V.0-stable
+    }
+
+    # Configure python virtualenvwrapper
+    # export WORKON_HOME=$HOME/.virtualenvs
+    # export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
+    # export VIRTUALENVWRAPPER_VIRTUALENV
+    # source /usr/local/bin/virtualenvwrapper.sh
+    
+    
     # JAVA configuration per:
     # https://c3energy.atlassian.net/wiki/DOC/pages/1043628424/Installing+c3server+on+your+Mac+using+your+GitHub+clone
     export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home
+
+    function c3_docker_search() {
+        docker search ci-artifacts.c3.ai/$1
+    }
 fi
 
 # utility command
 alias lsa='ls -AlhG'
 alias lsd='ls -AlhG -d */'
 alias zshconfig='emacs ~/.zshrc -nw'
-alias bashconfig='emacs ~/.bashrc.d/bash_personal.sh -nw'
+alias bashconfig='emacs ~/.bashrc.d/bash-personal.sh -nw'
 
 # python configuration
 alias python='python3'
@@ -66,7 +86,7 @@ alias gpull='git pull'
 #    docker exec -it $CONTAINERID /bin/bash
 #}
 
-alias pip='pip3'
+alias pip='/usr/local/bin/pip3'
 alias tp='bpytop'
 
 alias psa='ps -a -l'
@@ -133,7 +153,7 @@ function prov() {
             ;;
         uidemo)
             packageName="uiDemo"
-            tenantName="uiDemo"
+            tenantName="uidemo"
             ;;
         hack)
             packageName="packageDependecyVisualizer"
@@ -161,7 +181,7 @@ function prov() {
                 shift
                 ;;
             -g|--gittree)
-                echo "Running from git trees location"
+                echo "- running from git trees location"
                 provisionLocation=~/c3/provisionLocation2
                 shift
                 ;;
@@ -185,9 +205,9 @@ function prov() {
     cd $provisionLocation
     echo "###########################################################################"
     echo "# Provisioning from:                                                      #"
-    echo "# \t$provisionLocation"
-    echo "# Provision command:                                                      #"
-    echo "# \tc3 prov tag -t $tenantName:dev -c $packageName -u BA:BA -e $url $testFlag $resetFlag"
+    echo -e "# \t$provisionLocation"
+    echo -e "# Provision command:                                                      #"
+    echo -e "# \tc3 prov tag -t $tenantName:dev -c $packageName -u BA:BA -e $url $testFlag $resetFlag"
     echo "###########################################################################"
     c3 prov tag -t $tenantName:dev -c $packageName -u BA:BA -e $url $testFlag $resetFlag
     cd $currentDir
@@ -241,11 +261,11 @@ function docker-server-restart() {
     echo "###########################################################################"
     echo "# Running docker like"
     echo "# docker run -d --name $C3_SERVER_CONTAINER_NAME"
-    echo "#\t--env VM_MIN_MEM " 
-    echo "#\t--env VM_MAX_MEM " 
-    echo "#\t--env VM_NEW_RATIO "
-    echo "#\t-it -p 8080:8080 " 
-    echo "#\t$dockerImageNumber"
+    echo -e "#\t--env VM_MIN_MEM " 
+    echo -e  "#\t--env VM_MAX_MEM " 
+    echo -e "#\t--env VM_NEW_RATIO "
+    echo -e "#\t-it -p 8080:8080 " 
+    echo -e "#\t$dockerImageNumber"
     echo "###########################################################################"
     docker run -d --name $C3_SERVER_CONTAINER_NAME \
            --env VM_MIN_MEM \
@@ -254,6 +274,8 @@ function docker-server-restart() {
            -it -p 8080:8080 \
            $dockerImageNumber
 }
+
+
 
 function c3server() {
     if [ -z $1 ]
@@ -264,14 +286,20 @@ function c3server() {
     elif [ $1 = "--help" ]
     then
         echo "Usage:  c3server VERSION [COMMAND]\n"
-        echo "Commands:\n start\tStart the docker container titled c3server<VERSION>"
-        echo " stop\tStop the docker container titled c3server<VERSION>"
-        return 0
-    elif [ $1 != 20 ] && [ $1 != 27 ] && [ $1 != 28 ] && [ $1 != 28_2 ] && [  $1 != 23 ] && [  $1 != 23_2 ] && [ $1 != 26_2 ] && [ $1 != 29 ] && [ $1 != 29_2 ]
-    then
-        echo "You did not enter a valid c3server version"
+        echo -e "Commands:\n start\tStart the docker container titled c3server<VERSION>"
+        echo -e " stop\tStop the docker container titled c3server<VERSION>"
         return 0
     fi
+
+    docker_search_string=$(docker container ls -a | grep "c3server$1\>")
+    if [[ -z $docker_search_string ]]
+    then
+        echo "The server version you entered is not installed locally"
+        echo "Please pull server version and try again"
+        return 0
+    fi
+
+    
     C3SERVERDOCKERCONTAINER="c3server$1"
 
     if [ -z $2 ] || [ $2 = start ]
@@ -283,7 +311,7 @@ function c3server() {
          echo "Stopping $C3SERVERDOCKERCONTAINER"
          docker container stop $C3SERVERDOCKERCONTAINER
     else
-        echo "Invalid command '$2'\nDid you mean 'start'\'stop'?"
+        echo -e "Invalid command '$2'\nDid you mean 'start'\'stop'?"
     fi
 }
 
@@ -342,7 +370,7 @@ function dockerNewServer(){
 }
 
 function piconnect() {
-    ssh pi@192.168.1.93
+    ssh -Y pi@192.168.1.93
 }
 
 
@@ -380,3 +408,15 @@ function swaptrees() {
     git checkout $BRANCH1
 }
 
+
+function test_c3server(){
+    docker_search_string=$(docker container ls -a | grep "c3server$1\>")
+    if [[ -z $docker_search_string ]]
+    then
+        echo "The server version you entered is not installed locally"
+        echo "Please pull server version and try again"
+        return 0
+    else
+        echo "Launching c3server$1"
+    fi
+}
