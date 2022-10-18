@@ -4,7 +4,7 @@ if [ -x ~/.bashrc_bootstrap ]
 then
     # bring in some of the C3 shell configuration
     # TODO download the .git-prompt file on locally
-    source ~/.bashrc_bootstrap
+#    source ~/.bashrc_bootstrap
     export PS1="\[\033[36m\]\u\[\033[37m\] @ \[\033[32m\]\w\[\033[33m\]\$(__git_ps1) \n\[\033[35m\]$ \[\033[00m\]"
 fi
 
@@ -158,6 +158,10 @@ function prov() {
         hack)
             packageName="packageDependecyVisualizer"
             tenantName="hackathon"
+            ;;
+        so)
+            packageName="sourcingOptimization"
+            tenantName="so"
             ;;
         *)
             echo "Error in package name '$package' not recognized"
