@@ -16,13 +16,14 @@ if [[ ! -z $(bpytop -v) ]]; then alias tp='bpytop'
 else echo "BPYTOP NOT INSTALLED"; fi
 
 # C3 Specific Configuration
-if [[ $(whoami) == "jack.wennerstrumc3.ai" ]]
+if [[ $(whoami) == "jack" ]]
 then
     # root folders
     alias c3root='cd ~/c3'
     alias provroot='c3root && cd provisionLocation'
     alias provroot2='c3root && cd provisionLocation2'
     alias fisroot='cd ~/c3/c3fis'
+    eval "$(direnv hook bash)"
 
     alias clang++='clang++ -std=c++17'
     
@@ -47,7 +48,8 @@ then
     
     # JAVA configuration per:
     # https://c3energy.atlassian.net/wiki/DOC/pages/1043628424/Installing+c3server+on+your+Mac+using+your+GitHub+clone
-    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home
+    # export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home
+    # NOTE: configuration of JAVA_HOME has been moved to ~/.bash_profile
 
     function c3_docker_search() {
         docker search ci-artifacts.c3.ai/$1
